@@ -99,6 +99,9 @@ def get_title(bs):
     title_divs = bs.select('.se_title > .se_textView > .se_textarea')
     if title_divs == []:
         title_divs = bs.select('.tit_h3')
+        if title_divs == []:
+            title_divs = bs.select('.se-fs-fs32')
+            print("sex", title_divs)
     for title in title_divs:
         final_title = re.sub(r'(\s\s[\s]+)', '', str(title.text))
         return final_title
