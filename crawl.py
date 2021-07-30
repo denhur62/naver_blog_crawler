@@ -4,14 +4,13 @@ from selenium import webdriver
 import time
 import re
 from settings import WEB_DRIVER_PATH
-import xlwt
-
+import csv
 DATE = 0
 TITLE = 1
 TEXT = 2
 
+
 def make_basic_url(keyword, start, end):
-    print('make_basic_url')
     base_url = 'https://m.search.naver.com/search.naver?display=15&nso=p%3A'
     period = 'from' + start + 'to' + end
     query = '&query=' + parse.quote(keyword)
@@ -19,8 +18,8 @@ def make_basic_url(keyword, start, end):
     final_url = base_url + period + query + end
     return final_url
 
+
 def get_blog_posting_urls(keyword, start, end, driver):
-    print('get_blog_posting_urls')
     basic_url = make_basic_url(keyword, start, end)
     blog_postings = []
     index = 1
@@ -32,22 +31,22 @@ def get_blog_posting_urls(keyword, start, end, driver):
 
         driver.get(url)
         html = driver.page_source
-        bs = BeautifulSoup(html, 'html5lib')
-        links = bs.select('.bx a')
+        bs = BeautifulSoup(html, 'html.parser')
+        links = bs.select('.api_txt_lines')
         for single_link in links:
-        # single_link가 https://m.blg.naver.com을 포함하면 그걸 가져오자
+            # single_link가 https://m.blg.naver.com을 포함하면 그걸 가져오자
             href = re.findall(regex_href, str(single_link))
-            if href != None and href !=[]:
+            if href != None and href != []:
                 if href in blog_postings:
                     flag = False
-                    break;
+                    break
                 else:
                     blog_postings.append(href)
         index += 15
     return blog_postings
 
+
 def get_element(type, posting_addr, driver):
-    print('get_element')
     url = 'https://m.blog.naver.com/' + posting_addr[0]
     driver.get(url)
     html = driver.page_source.encode('utf-8')
@@ -60,14 +59,19 @@ def get_element(type, posting_addr, driver):
     }
     return switcher.get(type)(bs)
 
+
 def get_date(bs):
     print('get_date')
     date_divs = bs.select('.se_date')
+    date_divs2 = bs.select('.blog_date')
     date = re.findall(r'(20[\d\s\.\:]*)', str(date_divs))
+    date2 = re.findall(r'(20[\d\s\.\:]*)', str(date_divs2))
     try:
         return date[0]
     except IndexError:
-        return None
+        date = date2[0].replace('\n', '')
+        return date.rstrip()
+
 
 def get_text(bs):
     print('get_text')
@@ -85,10 +89,13 @@ def get_text(bs):
         text = re.sub(r'(\<.+?\>)', '', str(text))
         if text not in text_for_blog:
             text_for_blog += text
+    text_for_blog = text_for_blog.replace('\n', "")
+    if text_for_blog[:3] == "로그인":
+        text_for_blog = text_for_blog[40:]
     return text_for_blog
 
+
 def get_title(bs):
-    print('get_title')
     title_divs = bs.select('.se_title > .se_textView > .se_textarea')
     if title_divs == []:
         title_divs = bs.select('.tit_h3')
@@ -96,16 +103,11 @@ def get_title(bs):
         final_title = re.sub(r'(\s\s[\s]+)', '', str(title.text))
         return final_title
 
-def save_xlsx(wb, ws, broad_name, dining_name, broad_date, list1, list2, index):
+
+def save_csv(list1, list2, list3):
     print('save_xlsx')
-
-    for val1, val2 in zip(list1, list2):
-        ws.write(index, 0, broad_name)
-        ws.write(index, 1, dining_name)
-        ws.write(index, 2, broad_date)
-        ws.write(index, 3, val1)
-        ws.write(index, 4, val2)
-        # ws.write(index, 5, val3)
-        index += 1
-
-    return index
+    f = open("sample.csv", "a", encoding="UTF-8", newline='')
+    csvWriter = csv.writer(f)
+    for val1, val2, val3 in zip(list1, list2, list3):
+        csvWriter.writerow([val1, val2, val3])
+    f.close()
