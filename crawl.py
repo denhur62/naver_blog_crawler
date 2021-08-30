@@ -52,7 +52,7 @@ def get_element(type, posting_addr, driver):
     url = 'https://m.blog.naver.com/' + posting_addr[0]
     driver.get(url)
     html = driver.page_source.encode('utf-8')
-    bs = BeautifulSoup(html, 'lxml', from_encoding='utf-8')
+    bs = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
 
     switcher = {
         0: get_date,
@@ -71,8 +71,11 @@ def get_date(bs):
     try:
         return date[0]
     except IndexError:
-        date = date2[0].replace('\n', '')
-        return date.rstrip()
+        try:
+            date = date2[0].replace('\n', '')
+            return date.rstrip()
+        except:
+            return None
 
 
 def get_text(bs):
@@ -117,9 +120,10 @@ def get_image(bs):
 
 
 def save_csv(list1, list2, list3, list4):
-    f = open("sample.csv", "a", encoding="UTF-8", newline='')
+    f = open("diary.csv", "a", encoding="UTF-8", newline='')
     csvWriter = csv.writer(f)
     for val1, val2, val3, val4 in zip(list1, list2, list3, list4):
-        csvWriter.writerow([val1, val2, val3, *val4])
+        if val1 and val2 and val3 and val4:
+            csvWriter.writerow([val1, val2, val3, *val4])
 
     f.close()
