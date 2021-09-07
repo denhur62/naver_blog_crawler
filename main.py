@@ -32,7 +32,7 @@ for start_date, end_date, dining_name in zip(START_DATE, END_DATE, DINING_NAME):
         # images.append(image)
         # csv 중간 저장
         if cnt % 50 == 0:
-            save_csv(dates, titles, texts, window_url)
+            save_csv(titles, dates, texts, window_url)
             dates = []
             titles = []
             texts = []
@@ -40,4 +40,4 @@ for start_date, end_date, dining_name in zip(START_DATE, END_DATE, DINING_NAME):
             window_url = window_url[50:]
         if cnt % 10 == 0:
             print(cnt, post_len)
-    save_csv(dates, titles, texts, window_url)
+    save_csv(titles, dates, texts, window_url)
